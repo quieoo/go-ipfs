@@ -179,12 +179,17 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.Node, opts ...options
 }
 
 func (api *UnixfsAPI) Get(ctx context.Context, p path.Path) (files.Node, error) {
+
+
 	ses := api.core().getSession(ctx)
 
 	nd, err := ses.ResolveNode(ctx, p)
+
 	if err != nil {
 		return nil, err
 	}
+
+
 
 	return unixfile.NewUnixfsFile(ctx, ses.dag, nd)
 }

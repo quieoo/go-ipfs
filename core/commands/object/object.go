@@ -456,7 +456,6 @@ And then run:
 			}
 
 			fmt.Fprintln(w, o)
-
 			return nil
 		}),
 	},

@@ -3,12 +3,12 @@ package coreapi
 import (
 	"context"
 	"fmt"
-
 	blockservice "github.com/ipfs/go-blockservice"
 	cid "github.com/ipfs/go-cid"
 	cidutil "github.com/ipfs/go-cidutil"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	offline "github.com/ipfs/go-ipfs-exchange-offline"
+	"github.com/ipfs/go-ipfs/quieoo"
 	dag "github.com/ipfs/go-merkledag"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	caopts "github.com/ipfs/interface-go-ipfs-core/options"
@@ -34,6 +34,8 @@ func (api *DhtAPI) FindPeer(ctx context.Context, p peer.ID) (peer.AddrInfo, erro
 }
 
 func (api *DhtAPI) FindProviders(ctx context.Context, p path.Path, opts ...caopts.DhtFindProvidersOption) (<-chan peer.AddrInfo, error) {
+
+	fmt.Printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
 	settings, err := caopts.DhtFindProvidersOptions(opts...)
 	if err != nil {
 		return nil, err
@@ -55,6 +57,7 @@ func (api *DhtAPI) FindProviders(ctx context.Context, p path.Path, opts ...caopt
 	}
 
 	pchan := api.routing.FindProvidersAsync(ctx, rp.Cid(), numProviders)
+
 	return pchan, nil
 }
 

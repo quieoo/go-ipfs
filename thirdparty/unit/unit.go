@@ -44,3 +44,4 @@ func (i Information) String() string {
 	}
 	return fmt.Sprintf("%d %s", d, symbol)
 }
+

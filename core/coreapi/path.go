@@ -3,9 +3,8 @@ package coreapi
 import (
 	"context"
 	"fmt"
-	gopath "path"
-
 	"github.com/ipfs/go-ipfs/namesys/resolve"
+	gopath "path"
 
 	"github.com/ipfs/go-cid"
 	ipld "github.com/ipfs/go-ipld-format"
@@ -19,11 +18,12 @@ import (
 // ResolveNode resolves the path `p` using Unixfs resolver, gets and returns the
 // resolved Node.
 func (api *CoreAPI) ResolveNode(ctx context.Context, p path.Path) (ipld.Node, error) {
+
 	rp, err := api.ResolvePath(ctx, p)
+
 	if err != nil {
 		return nil, err
 	}
-
 	node, err := api.dag.Get(ctx, rp.Cid())
 	if err != nil {
 		return nil, err
@@ -34,7 +34,10 @@ func (api *CoreAPI) ResolveNode(ctx context.Context, p path.Path) (ipld.Node, er
 // ResolvePath resolves the path `p` using Unixfs resolver, returns the
 // resolved path.
 func (api *CoreAPI) ResolvePath(ctx context.Context, p path.Path) (path.Resolved, error) {
+
+	//fmt.Println(p.String())
 	if _, ok := p.(path.Resolved); ok {
+		//fmt.Println("path resolved")
 		return p.(path.Resolved), nil
 	}
 	if err := p.IsValid(); err != nil {
@@ -42,7 +45,11 @@ func (api *CoreAPI) ResolvePath(ctx context.Context, p path.Path) (path.Resolved
 	}
 
 	ipath := ipfspath.Path(p.String())
+	//fmt.Println("ipath1 "+ipath)
+
 	ipath, err := resolve.ResolveIPNS(ctx, api.namesys, ipath)
+	//fmt.Println("ipath2 "+ipath)
+
 	if err == resolve.ErrNoNamesys {
 		return nil, coreiface.ErrOffline
 	} else if err != nil {

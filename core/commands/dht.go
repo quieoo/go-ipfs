@@ -141,6 +141,9 @@ var findProvidersDhtCmd = &cmds.Command{
 		cmds.IntOption(numProvidersOptionName, "n", "The number of providers to find.").WithDefault(20),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		//fmt.println("findproviders")
+		//fmt.Printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
+
 		n, err := cmdenv.GetNode(env)
 		if err != nil {
 			return err
@@ -164,6 +167,7 @@ var findProvidersDhtCmd = &cmds.Command{
 		ctx, cancel := context.WithCancel(req.Context)
 		ctx, events := routing.RegisterForQueryEvents(ctx)
 
+		//fmt.Println("findrpovidersAsync, cid: "+c.String()+" numproviders: "+strconv.Itoa(numProviders))
 		pchan := n.Routing.FindProvidersAsync(ctx, c, numProviders)
 
 		go func() {
@@ -232,6 +236,8 @@ var provideRefDhtCmd = &cmds.Command{
 		cmds.BoolOption(recursiveOptionName, "r", "Recursively provide entire graph."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		//fmt.println("providerref")
+		//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
 		nd, err := cmdenv.GetNode(env)
 		if err != nil {
 			return err
@@ -319,6 +325,7 @@ var provideRefDhtCmd = &cmds.Command{
 }
 
 func provideKeys(ctx context.Context, r routing.Routing, cids []cid.Cid) error {
+	//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
 	for _, c := range cids {
 		err := r.Provide(ctx, c, true)
 		if err != nil {
@@ -329,6 +336,7 @@ func provideKeys(ctx context.Context, r routing.Routing, cids []cid.Cid) error {
 }
 
 func provideKeysRec(ctx context.Context, r routing.Routing, dserv ipld.DAGService, cids []cid.Cid) error {
+	//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
 	provided := cid.NewSet()
 	for _, c := range cids {
 		kset := cid.NewSet()
@@ -367,6 +375,8 @@ var findPeerDhtCmd = &cmds.Command{
 		cmds.BoolOption(dhtVerboseOptionName, "v", "Print extra information."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+		//fmt.println("findpeer")
+		//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
 		nd, err := cmdenv.GetNode(env)
 		if err != nil {
 			return err
@@ -451,6 +461,10 @@ Different key types can specify other 'best' rules.
 		cmds.BoolOption(dhtVerboseOptionName, "v", "Print extra information."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+
+		//fmt.println("getvalue")
+		//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
+
 		nd, err := cmdenv.GetNode(env)
 		if err != nil {
 			return err
@@ -548,6 +562,10 @@ identified by QmFoo.
 		cmds.BoolOption(dhtVerboseOptionName, "v", "Print extra information."),
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+
+		//fmt.println("putvalue")
+		//fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
+
 		nd, err := cmdenv.GetNode(env)
 		if err != nil {
 			return err
@@ -623,6 +641,9 @@ type printFunc func(obj *routing.QueryEvent, out io.Writer, verbose bool) error
 type pfuncMap map[routing.QueryEventType]printFunc
 
 func printEvent(obj *routing.QueryEvent, out io.Writer, verbose bool, override pfuncMap) error {
+
+	////fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
+
 	if verbose {
 		fmt.Fprintf(out, "%s: ", time.Now().Format("15:04:05.000"))
 	}
@@ -674,6 +695,9 @@ func printEvent(obj *routing.QueryEvent, out io.Writer, verbose bool, override p
 }
 
 func escapeDhtKey(s string) (string, error) {
+
+	////fmt.printf("我是 %s, %s 在调用我!\n", quieoo.PrintMyName(),quieoo.PrintCallerName())
+
 	parts := path.SplitList(s)
 	if len(parts) != 3 ||
 		parts[0] != "" ||

@@ -3,15 +3,13 @@ package commands
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-
-	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
-
 	"github.com/ipfs/go-ipfs-cmds"
 	"github.com/ipfs/go-ipfs-files"
+	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
 	"github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
+	"io"
+	"os"
 )
 
 const (
@@ -117,8 +115,12 @@ func cat(ctx context.Context, api iface.CoreAPI, paths []string, offset int64, m
 	if max == 0 {
 		return nil, 0, nil
 	}
+
 	for _, p := range paths {
+		//fmt.Println("path: "+p)	//file path
+
 		f, err := api.Unixfs().Get(ctx, path.New(p))
+		//got file
 		if err != nil {
 			return nil, 0, err
 		}
@@ -133,10 +135,12 @@ func cat(ctx context.Context, api iface.CoreAPI, paths []string, offset int64, m
 			return nil, 0, iface.ErrNotSupported
 		}
 
+
 		fsize, err := file.Size()
 		if err != nil {
 			return nil, 0, err
 		}
+		//fmt.Println("unixfs get: "+strconv.FormatInt(fsize,10)) //get file
 
 		if offset > fsize {
 			offset = offset - fsize

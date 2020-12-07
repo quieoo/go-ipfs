@@ -232,10 +232,14 @@ only-hash, and progress/status related flags) will change the final hash.
 		var added int
 		addit := toadd.Entries()
 		for addit.Next() {
+
 			_, dir := addit.Node().(files.Directory)
 			errCh := make(chan error, 1)
 			events := make(chan interface{}, adderOutChanSize)
 			opts[len(opts)-1] = options.Unixfs.Events(events)
+
+			//fmt.Println("addit node "+addit.Name())
+
 
 			go func() {
 				var err error
