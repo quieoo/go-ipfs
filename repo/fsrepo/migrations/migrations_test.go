@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/ipfs/go-ipfs/repo/fsrepo/migrations/ipfsdir"
 )
 
 func TestFindMigrations(t *testing.T) {
@@ -157,7 +155,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	testVer := 11
-	err = ipfsdir.WriteRepoVersion(fakeIpfs, testVer)
+	err = WriteRepoVersion(fakeIpfs, testVer)
 	if err != nil {
 		t.Fatal(err)
 	}
