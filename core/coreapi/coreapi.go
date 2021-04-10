@@ -20,7 +20,8 @@ import (
 
 	bserv "github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-dagwriter"
-	"github.com/ipfs/go-fetcher"
+	bsdagwriter "github.com/ipfs/go-dagwriter/impl/blockservice"
+	bsfetcher "github.com/ipfs/go-fetcher/impl/blockservice"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	exchange "github.com/ipfs/go-ipfs-exchange-interface"
 	offlinexch "github.com/ipfs/go-ipfs-exchange-offline"
@@ -59,7 +60,7 @@ type CoreAPI struct {
 
 	blocks          bserv.BlockService
 	dag             ipld.DAGService
-	fetcherConfig   fetcher.FetcherConfig
+	fetcherConfig   bsfetcher.FetcherConfig
 	dagWriter       dagwriter.DagWritingService
 	peerstore       pstore.Peerstore
 	peerHost        p2phost.Host
@@ -110,7 +111,7 @@ func (api *CoreAPI) Dag() coreiface.APIDagService {
 }
 
 type nodeAPI struct {
-	fetcher.FetcherConfig
+	bsfetcher.FetcherConfig
 	dagwriter.DagWritingService
 }
 
@@ -200,9 +201,9 @@ func (api *CoreAPI) WithOptions(opts ...options.ApiOption) (coreiface.CoreAPI, e
 		parentOpts: settings,
 	}
 
-	subApi.fetcherConfig = fetcher.NewFetcherConfig(subApi.blocks)
-	subApi.fetcherConfig.AugmentChooser = unixfsnode.AugmentPrototypeChooser
-	subApi.dagWriter = dagwriter.NewDagWriter(subApi.blocks)
+	subApi.fetcherConfig = bsfetcher.NewFetcherConfig(subApi.blocks)
+	subApi.fetcherConfig.NodeReifier = unixfsnode.Reify
+	subApi.dagWriter = bsdagwriter.NewDagWriter(subApi.blocks)
 
 	subApi.checkOnline = func(allowOffline bool) error {
 		if !n.IsOnline && !allowOffline {
