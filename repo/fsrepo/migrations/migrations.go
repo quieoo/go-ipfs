@@ -19,30 +19,59 @@ const (
 	distFSRM     = "fs-repo-migrations"
 )
 
+type Downloads struct {
+	Files  []string
+	tmpDir string
+}
+
+func (d Downloads) Cleanup() {
+	if d.tmpDir != "" {
+		d.Files = nil
+		if err := os.RemoveAll(d.tmpDir); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}
+}
+
 // RunMigration finds, downloads, and runs the individual migrations needed to
 // migrate the repo from its current version to the target version.
 func RunMigration(ctx context.Context, fetcher Fetcher, targetVer int, ipfsDir string, allowDowngrade bool) error {
+	dl, err := doMigration(ctx, fetcher, targetVer, ipfsDir, allowDowngrade)
+	dl.Cleanup()
+	return err
+}
+
+func RunMigrationDL(ctx context.Context, fetcher Fetcher, targetVer int, ipfsDir string, allowDowngrade bool) (Downloads, error) {
+	dl, err := doMigration(ctx, fetcher, targetVer, ipfsDir, allowDowngrade)
+	if err != nil {
+		dl.Cleanup()
+	}
+	return dl, err
+}
+
+func doMigration(ctx context.Context, fetcher Fetcher, targetVer int, ipfsDir string, allowDowngrade bool) (Downloads, error) {
+	var dl Downloads
 	ipfsDir, err := CheckIpfsDir(ipfsDir)
 	if err != nil {
-		return err
+		return dl, err
 	}
 	fromVer, err := RepoVersion(ipfsDir)
 	if err != nil {
-		return fmt.Errorf("could not get repo version: %s", err)
+		return dl, fmt.Errorf("could not get repo version: %s", err)
 	}
 	if fromVer == targetVer {
 		// repo already at target version number
-		return nil
+		return dl, nil
 	}
 	if fromVer > targetVer && !allowDowngrade {
-		return fmt.Errorf("downgrade not allowed from %d to %d", fromVer, targetVer)
+		return dl, fmt.Errorf("downgrade not allowed from %d to %d", fromVer, targetVer)
 	}
 
 	log.Print("Looking for suitable migration binaries.")
 
 	migrations, binPaths, err := findMigrations(ctx, fromVer, targetVer)
 	if err != nil {
-		return err
+		return dl, err
 	}
 
 	// Download migrations that were not found
@@ -58,15 +87,17 @@ func RunMigration(ctx context.Context, fetcher Fetcher, targetVer int, ipfsDir s
 
 		tmpDir, err := ioutil.TempDir("", "migrations")
 		if err != nil {
-			return err
+			return dl, err
 		}
-		defer os.RemoveAll(tmpDir)
+		dl.tmpDir = tmpDir
 
 		fetched, err := fetchMigrations(ctx, fetcher, missing, tmpDir)
 		if err != nil {
 			log.Print("Failed to download migrations.")
-			return err
+			return dl, err
 		}
+		dl.Files = fetched
+
 		for i := range missing {
 			binPaths[missing[i]] = fetched[i]
 		}
@@ -80,12 +111,12 @@ func RunMigration(ctx context.Context, fetcher Fetcher, targetVer int, ipfsDir s
 		log.Println("Running migration", migration, "...")
 		err = runMigration(ctx, binPaths[migration], ipfsDir, revert)
 		if err != nil {
-			return fmt.Errorf("migration %s failed: %s", migration, err)
+			return dl, fmt.Errorf("migration %s failed: %s", migration, err)
 		}
 	}
 	log.Printf("Success: fs-repo migrated to version %d.\n", targetVer)
 
-	return nil
+	return dl, nil
 }
 
 func NeedMigration(target int) (bool, error) {
