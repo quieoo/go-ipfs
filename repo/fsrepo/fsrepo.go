@@ -109,6 +109,7 @@ var _ repo.Repo = (*FSRepo)(nil)
 // Open the FSRepo at path. Returns an error if the repo is not
 // initialized.
 func Open(repoPath string) (repo.Repo, error) {
+
 	fn := func() (repo.Repo, error) {
 		return open(repoPath)
 	}

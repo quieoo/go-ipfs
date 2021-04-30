@@ -149,8 +149,10 @@ func (c *mountDatastoreConfig) DiskSpec() DiskSpec {
 }
 
 func (c *mountDatastoreConfig) Create(path string) (repo.Datastore, error) {
+
 	mounts := make([]mount.Mount, len(c.mounts))
 	for i, m := range c.mounts {
+		//fmt.Println("mounts")
 		ds, err := m.ds.Create(path)
 		if err != nil {
 			return nil, err
@@ -240,6 +242,7 @@ func (c *measureDatastoreConfig) DiskSpec() DiskSpec {
 }
 
 func (c measureDatastoreConfig) Create(path string) (repo.Datastore, error) {
+	//fmt.Printf("create measuredatastore path: %s\n",path)
 	child, err := c.child.Create(path)
 	if err != nil {
 		return nil, err

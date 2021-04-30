@@ -3,8 +3,10 @@ package coreapi
 import (
 	"context"
 	"fmt"
+	flatfs "github.com/ipfs/go-ds-flatfs"
 	"github.com/ipfs/go-ipfs/namesys/resolve"
 	gopath "path"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	ipld "github.com/ipfs/go-ipld-format"
@@ -18,13 +20,16 @@ import (
 // ResolveNode resolves the path `p` using Unixfs resolver, gets and returns the
 // resolved Node.
 func (api *CoreAPI) ResolveNode(ctx context.Context, p path.Path) (ipld.Node, error) {
-
 	rp, err := api.ResolvePath(ctx, p)
 
 	if err != nil {
 		return nil, err
 	}
+	flatfs.IOReport.CidStart(rp.Cid(),time.Now())
+
 	node, err := api.dag.Get(ctx, rp.Cid())
+
+	flatfs.IOReport.CidFinishResolve(rp.Cid(),time.Now())
 	if err != nil {
 		return nil, err
 	}

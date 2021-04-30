@@ -521,6 +521,7 @@ func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
 	//logging.SetLogLevel("dht","debug")
 
 	file, err := os.Open("cids")
+	defer file.Close()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		os.Exit(1)
@@ -548,6 +549,7 @@ func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
 			//quieoo.MyTracker.PrintAll()
 			//quieoo.MyTracker.Collect()
 			quieoo.MyTracker.CollectRedundant()
+			quieoo.MyTracker.CollectVariance()
 			return
 		}
 
@@ -693,13 +695,20 @@ func main() {
 
 		cores, _ := strconv.Atoi(os.Args[4])
 		Upload(uploadsize, uploadnumber, cores, ctx, ipfs)
-		return
+		//return
 	}
 	if cmd == "downloads" {
 
 		DownloadSerial(ctx, ipfs)
-		return
+		//return
 	}
 
-	testtick()
+	//quieoo.DistanceAnalyze()
+	stall:=make(chan int)
+	for{
+		select {
+			case <-stall:
+
+		}
+	}
 }

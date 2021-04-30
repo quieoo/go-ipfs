@@ -5,20 +5,18 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/cheggaaa/pb"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	files "github.com/ipfs/go-ipfs-files"
+	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
+	"github.com/ipfs/go-ipfs/core/commands/e"
+	"github.com/ipfs/interface-go-ipfs-core/path"
+	"github.com/whyrusleeping/tar-utils"
 	"io"
 	"os"
 	gopath "path"
 	"path/filepath"
 	"strings"
-
-	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
-	"github.com/ipfs/go-ipfs/core/commands/e"
-
-	"github.com/cheggaaa/pb"
-	cmds "github.com/ipfs/go-ipfs-cmds"
-	files "github.com/ipfs/go-ipfs-files"
-	"github.com/ipfs/interface-go-ipfs-core/path"
-	"github.com/whyrusleeping/tar-utils"
 )
 
 var ErrInvalidCompressionLevel = errors.New("compression level must be between 1 and 9")
@@ -29,6 +27,7 @@ const (
 	compressOptionName         = "compress"
 	compressionLevelOptionName = "compression-level"
 )
+
 
 var GetCmd = &cmds.Command{
 	Helptext: cmds.HelpText{
@@ -60,6 +59,9 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 		return err
 	},
 	Run: func(req *cmds.Request, res cmds.ResponseEmitter, env cmds.Environment) error {
+
+		//flatfs.IOReport.Init()
+
 		cmplvl, err := getCompressOptions(req)
 		if err != nil {
 			return err
@@ -94,6 +96,7 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 	},
 	PostRun: cmds.PostRunMap{
 		cmds.CLI: func(res cmds.Response, re cmds.ResponseEmitter) error {
+
 			req := res.Request()
 
 			v, err := res.Next()
@@ -122,7 +125,6 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 				Compression: cmplvl,
 				Size:        int64(res.Length()),
 			}
-
 			return gw.Write(outReader, outPath)
 		},
 	},

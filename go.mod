@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/ipfs/go-bitswap v0.2.20
 	github.com/ipfs/go-block-format v0.0.2
-	github.com/ipfs/go-blockservice v0.1.3
+	github.com/ipfs/go-blockservice v0.1.4
 	github.com/ipfs/go-cid v0.0.7
 	github.com/ipfs/go-cidutil v0.0.2
 	github.com/ipfs/go-datastore v0.4.5
@@ -59,16 +59,16 @@ require (
 	github.com/jbenet/go-random v0.0.0-20190219211222-123a90aedc0c
 	github.com/jbenet/go-temp-err-catcher v0.1.0
 	github.com/jbenet/goprocess v0.1.4
-	github.com/libp2p/go-libp2p v0.12.0
-	github.com/libp2p/go-libp2p-circuit v0.4.0
+	github.com/libp2p/go-libp2p v0.11.0
+	github.com/libp2p/go-libp2p-circuit v0.3.1
 	github.com/libp2p/go-libp2p-connmgr v0.2.4
-	github.com/libp2p/go-libp2p-core v0.7.0
+	github.com/libp2p/go-libp2p-core v0.6.1
 	github.com/libp2p/go-libp2p-discovery v0.5.0
 	github.com/libp2p/go-libp2p-http v0.1.5
 	github.com/libp2p/go-libp2p-kad-dht v0.9.0
 	github.com/libp2p/go-libp2p-kbucket v0.4.7
 	github.com/libp2p/go-libp2p-loggables v0.1.0
-	github.com/libp2p/go-libp2p-mplex v0.3.0
+	github.com/libp2p/go-libp2p-mplex v0.2.4
 	github.com/libp2p/go-libp2p-noise v0.1.1
 	github.com/libp2p/go-libp2p-peerstore v0.2.6
 	github.com/libp2p/go-libp2p-pubsub v0.3.5
@@ -77,15 +77,16 @@ require (
 	github.com/libp2p/go-libp2p-record v0.1.3
 	github.com/libp2p/go-libp2p-routing-helpers v0.2.3
 	github.com/libp2p/go-libp2p-secio v0.2.2
-	github.com/libp2p/go-libp2p-swarm v0.3.1
-	github.com/libp2p/go-libp2p-testing v0.3.0
+	github.com/libp2p/go-libp2p-swarm v0.2.8
+	github.com/libp2p/go-libp2p-testing v0.2.0
 	github.com/libp2p/go-libp2p-tls v0.1.3
-	github.com/libp2p/go-libp2p-yamux v0.4.0
+	github.com/libp2p/go-libp2p-yamux v0.2.8
 	github.com/libp2p/go-socket-activation v0.0.2
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/libp2p/go-ws-transport v0.3.1
 	github.com/lucas-clemente/quic-go v0.18.1
 	github.com/mattn/go-runewidth v0.0.9 // indirect
+	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/multiformats/go-multiaddr-dns v0.2.0
@@ -101,7 +102,7 @@ require (
 	github.com/whyrusleeping/multiaddr-filter v0.0.0-20160516205228-e903e4adabd7
 	github.com/whyrusleeping/tar-utils v0.0.0-20180509141711-8c6c8ba81d5c
 	go.uber.org/fx v1.13.1
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
@@ -111,8 +112,26 @@ require (
 replace (
 	github.com/ipfs/go-bitswap => /home/quieoo/desktop/IPFS/go-bitswap
 	github.com/ipfs/go-blockservice => /home/quieoo/desktop/IPFS/go-blockservice
+	github.com/ipfs/go-datastore => /home/quieoo/desktop/IPFS/go-datastore
+	github.com/ipfs/go-ds-flatfs => /home/quieoo/desktop/IPFS/go-ds-flatfs
+	github.com/ipfs/go-ds-leveldb => /home/quieoo/desktop/IPFS/go-ds-leveldb
+	github.com/ipfs/go-ds-measure => /home/quieoo/desktop/IPFS/go-ds-measure
+	github.com/ipfs/go-ipfs-blockstore => /home/quieoo/desktop/IPFS/go-ipfs-blockstore
+	github.com/ipfs/go-ipfs-cmds => /home/quieoo/desktop/IPFS/go-ipfs-cmds
+	github.com/ipfs/go-ipfs-exchange-interface => /home/quieoo/desktop/IPFS/go-ipfs-exchange-interface
+	github.com/ipfs/go-ipfs-exchange-offline => /home/quieoo/desktop/IPFS/go-ipfs-exchange-offline
+	github.com/ipfs/go-ipfs-pinner => /home/quieoo/desktop/IPFS/go-ipfs-pinner
+	github.com/ipfs/go-ipfs-provider => /home/quieoo/desktop/IPFS/go-ipfs-provider
+	github.com/ipfs/go-ipld-format => /home/quieoo/desktop/IPFS/go-ipld-format
 	github.com/ipfs/go-merkledag => /home/quieoo/desktop/IPFS/go-merkledag
+	github.com/ipfs/go-unixfs => /home/quieoo/desktop/IPFS/go-unixfs
+	github.com/libp2p/go-libp2p => /home/quieoo/desktop/IPFS/go-libp2p
+	github.com/libp2p/go-libp2p-core => /home/quieoo/desktop/IPFS/go-libp2p-core
 	github.com/libp2p/go-libp2p-kad-dht => /home/quieoo/desktop/IPFS/go-libp2p-kad-dht
+	github.com/libp2p/go-libp2p-kbucket => /home/quieoo/desktop/IPFS/go-libp2p-kbucket
+	github.com/libp2p/go-libp2p-routing-helpers => /home/quieoo/desktop/IPFS/go-libp2p-routing-helpers
+	github.com/libp2p/go-libp2p-swarm => /home/quieoo/desktop/IPFS/go-libp2p-swarm
+
 )
 
 go 1.13

@@ -55,6 +55,7 @@ func (bs *VerifBS) PutMany(blks []blocks.Block) error {
 }
 
 func (bs *VerifBS) Get(c cid.Cid) (blocks.Block, error) {
+	//fmt.Printf("verify get %s %s\n",c,quieoo.PrintCallerName())
 	if err := verifcid.ValidateCid(c); err != nil {
 		return nil, err
 	}

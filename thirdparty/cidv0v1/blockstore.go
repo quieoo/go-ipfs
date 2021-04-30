@@ -28,6 +28,7 @@ func (b *blockstore) Has(c cid.Cid) (bool, error) {
 }
 
 func (b *blockstore) Get(c cid.Cid) (blocks.Block, error) {
+	//fmt.Printf("cidv0v1 get %s %s\n",c,quieoo.PrintCallerName())
 	block, err := b.Blockstore.Get(c)
 	if err == nil {
 		return block, nil
