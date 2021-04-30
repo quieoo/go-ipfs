@@ -1,14 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"crypto/rand"
 	"fmt"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-ipfs/quieoo"
+	mh "github.com/multiformats/go-multihash"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	config "github.com/ipfs/go-ipfs-config"
 	files "github.com/ipfs/go-ipfs-files"
@@ -16,6 +25,7 @@ import (
 	icore "github.com/ipfs/interface-go-ipfs-core"
 	icorepath "github.com/ipfs/interface-go-ipfs-core/path"
 	peerstore "github.com/libp2p/go-libp2p-peerstore"
+	"github.com/multiformats/go-multiaddr"
 	ma "github.com/multiformats/go-multiaddr"
 
 	"github.com/ipfs/go-ipfs/core"
@@ -47,11 +57,11 @@ func setupPlugins(externalPluginsPath string) error {
 }
 
 func createTempRepo(ctx context.Context) (string, error) {
-	repoPath, err := ioutil.TempDir("", "ipfs-shell")
+	/*repoPath, err := ioutil.TempDir("", "ipfs-shell")
 	if err != nil {
 		return "", fmt.Errorf("failed to get temp dir: %s", err)
-	}
-
+	}*/
+	repoPath := "~/.ipfs"
 	// Create a config with default options and a 2048 bit key
 	cfg, err := config.Init(ioutil.Discard, 2048)
 	if err != nil {
@@ -59,7 +69,8 @@ func createTempRepo(ctx context.Context) (string, error) {
 	}
 
 	// Create the repo with the config
-	err = fsrepo.Init(repoPath, cfg)
+	//err = fsrepo.Init(repoPath, cfg)
+	err = fsrepo.Init("~/.ipfs", cfg)
 	if err != nil {
 		return "", fmt.Errorf("failed to init ephemeral node: %s", err)
 	}
@@ -197,36 +208,7 @@ func getUnixfsNode(path string) (files.Node, error) {
 	return f, nil
 }
 
-/// -------
-
-func main() {
-	/// --- Part I: Getting a IPFS node running
-
-	fmt.Println("-- Getting an IPFS node running -- ")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	/*
-		// Spawn a node using the default path (~/.ipfs), assuming that a repo exists there already
-		fmt.Println("Spawning node on default repo")
-		ipfs, err := spawnDefault(ctx)
-		if err != nil {
-			fmt.Println("No IPFS repo available on the default path")
-		}
-	*/
-
-	// Spawn a node using a temporary path, creating a temporary repo for the run
-	fmt.Println("Spawning node on a temporary repo")
-	ipfs, err := spawnEphemeral(ctx)
-	if err != nil {
-		panic(fmt.Errorf("failed to spawn ephemeral node: %s", err))
-	}
-
-	fmt.Println("IPFS node is running")
-
-	/// --- Part II: Adding a file and a directory to IPFS
-
+func addgettest(ctx context.Context, ipfs icore.CoreAPI) {
 	fmt.Println("\n-- Adding and getting back files & directories --")
 
 	inputBasePath := "./example-folder/"
@@ -334,4 +316,390 @@ func main() {
 	fmt.Printf("Wrote the file to %s\n", outputPath)
 
 	fmt.Println("\nAll done! You just finalized your first tutorial on how to use go-ipfs as a library")
+
+}
+
+func syncMapTest(){
+	m:=new(sync.Map)
+	m.Store(1,"zhang")
+	m.Store(2,"liu")
+	m.Store(3,"liang")
+	m.Store(4,"li")
+
+	m.Range(func(key, value interface{}) bool {
+		if key==2 && value=="liu"{
+			m.Store(key,"sun")
+			return false
+		}
+		return true
+	})
+
+	m.Range(func(key, value interface{}) bool {
+		fmt.Printf("%d,%s\n",key,value)
+		return true
+	})
+}
+
+func testtick(){
+	limiter := time.Tick(time.Second)
+	fmt.Printf("Init %s\n",time.Now().String())
+	for{
+		select {
+		case <-limiter:
+			fmt.Printf("Tick %s\n",time.Now().String())
+		}
+	}
+}
+
+var StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
+
+// NewLenChars returns a new random string of the provided length, consisting of the provided byte slice of allowed characters(maximum 256).
+func NewLenChars(length int, chars []byte) string {
+	if length == 0 {
+		return ""
+	}
+	clen := len(chars)
+	if clen < 2 || clen > 256 {
+		panic("Wrong charset length for NewLenChars()")
+	}
+	maxrb := 255 - (256 % clen)
+	b := make([]byte, length)
+	r := make([]byte, length+(length/4)) // storage for random bytes.
+	i := 0
+	for {
+		if _, err := rand.Read(r); err != nil {
+			panic("Error reading random bytes: " + err.Error())
+		}
+		for _, rb := range r {
+			c := int(rb)
+			if c > maxrb {
+				continue // Skip this number to avoid modulo bias.
+			}
+			b[i] = chars[c%clen]
+			i++
+			if i == length {
+				return string(b)
+			}
+		}
+	}
+}
+
+func Ini() (context.Context, icore.CoreAPI, context.CancelFunc) {
+	fmt.Println("-- Getting an IPFS node running -- ")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
+
+	/*
+		// Spawn a node using the default path (~/.ipfs), assuming that a repo exists there already
+		fmt.Println("Spawning node on default repo")
+		ipfs, err := spawnDefault(ctx)
+		if err != nil {
+			fmt.Println("No IPFS repo available on the default path")
+		}
+	*/
+
+	// Spawn a node using a temporary path, creating a temporary repo for the run
+	fmt.Println("Spawning node on a temporary repo")
+	ipfs, err := spawnEphemeral(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to spawn ephemeral node: %s", err))
+	}
+
+	fmt.Println("IPFS node is running")
+	return ctx, ipfs, cancel
+}
+
+func Upload(size, number, cores int, ctx context.Context, ipfs icore.CoreAPI) {
+	f, _ := os.Create("cids")
+
+	fmt.Printf("Uploading files with size %d kb\n", size)
+	//s := NewLenChars(size, StdChars)
+
+	coreNumber := cores
+	stallchan := make(chan int)
+	totalAddTime:=0.0
+	totalProvideTime:=0.0
+	times:=0.0
+
+	sendFunc := func(i int) {
+		for j := 0; j < number/coreNumber; j++ {
+			var subs string
+			subs = NewLenChars(size, StdChars)
+			inputpath := fmt.Sprintf("./temp %d", i)
+			//fmt.Println(inputpath)
+			err := ioutil.WriteFile(inputpath, []byte(subs), 0666)
+
+			someFile, err := getUnixfsNode(inputpath)
+			if err != nil {
+				panic(fmt.Errorf("Could not get File: %s", err))
+			}
+			//cid, err := sh.Add(strings.NewReader(subs))
+			start:=time.Now()
+			cid, err := ipfs.Unixfs().Add(ctx, someFile)
+			//fmt.Printf("added file %s\n",cid.Cid())
+			provide:=time.Now()
+			//ipfs.Dht().Provide(ctx,cid)
+			//fmt.Printf("provide file %s\n",cid.Cid())
+			finish:=time.Now()
+			fmt.Printf("%s upload:provide time, (%f,%f)\n",cid.Cid(),provide.Sub(start).Seconds()*1000,finish.Sub(provide).Seconds()*1000)
+			totalAddTime+=provide.Sub(start).Seconds()
+			totalProvideTime+=finish.Sub(provide).Seconds()
+			times++
+
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %s", err)
+				os.Exit(1)
+			}
+
+			io.WriteString(f, strings.Split(cid.String(),"/")[2]+"\n")
+			//fmt.Println(cid)
+			if j%10 == 0 {
+				fmt.Printf("upload %d/%d\n", j, number)
+			}
+		}
+		stallchan <- i
+	}
+	for i := 0; i < coreNumber; i++ {
+		go sendFunc(i)
+	}
+
+	stalls := coreNumber
+	for {
+		select {
+		case <-stallchan:
+			fmt.Printf("core finished\n")
+			stalls--
+			if stalls <= 0 {
+				f.Close()
+				fmt.Printf("average addtime: %f ms,average provide time %f ms\n",totalAddTime*1000/times, totalProvideTime*1000/times)
+				return
+			}
+		}
+	}
+
+}
+
+func DisconnectToPeers(ctx context.Context, ipfs icore.CoreAPI, remove string) error {
+	//peerInfos := make(map[peer.ID]*peerstore.PeerInfo, len(peers))
+	//var peerInfos map[peer.ID]*peerstore.PeerInfo
+	peerInfos, err := ipfs.Swarm().Peers(ctx)
+	if err != nil {
+		//fmt.Println(err.Error())
+		return err
+	}
+	for _, con := range peerInfos {
+		if con.ID().String()!=remove{
+			continue
+		}
+		ci := peer.AddrInfo{
+			Addrs: []multiaddr.Multiaddr{con.Address()},
+			ID: con.ID(),
+		}
+
+		addrs,err:=peer.AddrInfoToP2pAddrs(&ci)
+		if err!=nil{
+			fmt.Println(err.Error())
+		}
+		//fmt.Printf("disconnect from %v\n",addrs)
+
+		for _,addr:=range addrs{
+			err = ipfs.Swarm().Disconnect(ctx, addr)
+			if err != nil {
+				return err
+			}
+		}
+		break
+	}
+	return nil
+}
+var embed78="12D3KooWHeYKNsxqc66jhtbaWbkaPJdq7VYPXZ3gsKA2bB3zoqY4"
+
+
+func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
+	//logging.SetLogLevel("dht","debug")
+
+	file, err := os.Open("cids")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s", err)
+		os.Exit(1)
+	}
+
+	br := bufio.NewReader(file)
+	var totalTime time.Duration = 0
+	var usetimes []time.Duration
+	var times = 0
+
+	for {
+		torequest, _, err := br.ReadLine()
+		if err != nil {
+			fmt.Println(err.Error())
+			//fmt.Printf("Througput %f MB/s\n",float64(size)*float64(number)/float64(1024*1024)/time.Now().Sub(ostart).Seconds())
+			//fmt.Printf("Request Efficiency %f MB/s\n", float64(size)*float64(number)/float64(1024*1024)/totalTime.Seconds())
+			//fmt.Printf("request time %f s\n", totalTime.Seconds())
+			fmt.Printf("average latency %f ms\n", totalTime.Seconds()*1000/float64(times))
+			sort.Slice(usetimes, func(i, j int) bool {
+				return usetimes[i] < usetimes[j]
+			})
+			pl99 := usetimes[times-times/100-1].Seconds()
+			fmt.Printf("99 percentile latency %f ms\n", pl99*1000)
+
+			//quieoo.MyTracker.PrintAll()
+			//quieoo.MyTracker.Collect()
+			quieoo.MyTracker.CollectRedundant()
+			return
+		}
+
+		//derr:=DisconnectToPeers(ctx,ipfs,embed78)
+
+
+		times++
+		start := time.Now()
+		//fmt.Printf("%s getting file%s\n",start.String(),string(torequest))
+		//err = sh.Get(string(torequest), "output")
+		p := icorepath.New(string(torequest))
+		rootNode, err := ipfs.Unixfs().Get(ctx, p)
+
+		if err != nil {
+			panic(fmt.Errorf("Could not get file with CID: %s", err))
+		}
+		err = files.WriteTo(rootNode, "./output/"+string(torequest))
+		if err != nil {
+			panic(fmt.Errorf("Could not write out the fetched CID: %s", err))
+		}
+
+		quieoo.MyTracker.Finish(string(torequest),time.Now())
+
+
+		usetime := time.Now().Sub(start)
+		usetimes = append(usetimes, usetime)
+		totalTime += usetime
+		fmt.Printf("got file %s, time %f ms\n", torequest, usetime.Seconds()*1000)
+
+		//remove peers
+		//removepeer:="12D3KooWB9gdRu8qfHdFU457WwJsm55V4J1N4jABYjckdP2cCidL"
+		//DisconnectToPeers(ctx, ipfs,removepeer)
+		//DisconnectToPeers(ctx,ipfs,embed78)
+	}
+
+}
+
+func trackerMocking(){
+	mhash,_:=mh.FromB58String("QmcWC9p4t7gnx82tmEaWVNotQe3HNLuJvYHK1EPtfVfQRU")
+	target:=cid.NewCidV0(mhash)
+
+	quieoo.MyTracker.WantBlocks(target,time.Now())
+	time.Sleep(500*time.Millisecond)
+	quieoo.MyTracker.FindProvider(target,time.Now())
+
+	p0,_:=peer.Decode("12D3KooWCqdWNU6CqpdsHodYZBJKjM8M8UmwpPWf7hwJuzvHwJjo")
+
+	resolver,err:=quieoo.MyTracker.GetResolverMH(mhash)
+	if err!=nil{
+		fmt.Println(err.Error())
+		return
+	}
+	resolver.Seed([]peer.ID{p0},time.Now())
+
+
+	time.Sleep(500*time.Millisecond)
+	resolver.Send(p0,time.Now())
+
+	time.Sleep(500*time.Millisecond)
+	closers,_:=peer.Decode("12D3KooWH6h7ghs5znUmTaB2VkQGpv5UYEs2bfEByzR4dfgve1XX")
+	resolver.GotCloser(p0,[]peer.ID{closers},time.Now())
+	resolver.GotProvider(p0,time.Now())
+	quieoo.MyTracker.FoundProvider(resolver.GetTarget(),time.Now())
+
+	resolver,_=quieoo.MyTracker.GetResolverMH(mhash)
+
+	time.Sleep(500*time.Millisecond)
+	quieoo.MyTracker.Connected(target,time.Now())
+
+	time.Sleep(500*time.Millisecond)
+	quieoo.MyTracker.Finish("QmcWC9p4t7gnx82tmEaWVNotQe3HNLuJvYHK1EPtfVfQRU",time.Now())
+
+	quieoo.MyTracker.PrintAll()
+}
+
+type person struct {
+	name string
+	age int
+}
+func(p *person)update(n string,a int){
+	p.name=n
+	p.age=a
+}
+
+type personController struct {
+	persons []person
+}
+
+func (pc *personController)AddTest()  {
+	p:=person{name: "d",age: 10}
+	pc.persons=append(pc.persons,p)
+}
+
+func (pc *personController)Result(){
+	for _,p:=range pc.persons{
+		fmt.Printf("%s %d\n",p.name,p.age)
+	}
+}
+
+
+
+func SliceTest(){
+	var pc personController
+	pc.AddTest()
+	pc.Result()
+
+	//This Way dont change the item
+	for _,p:=range pc.persons{
+		if p.name=="d"{
+			p.update("e",3)
+		}
+	}
+	pc.Result()
+	for i,_:=range pc.persons{
+		if pc.persons[i].name=="d"{
+			tmp:=pc.persons[i]
+			tmp.update("e",3)
+			pc.persons[i]=tmp
+		}
+	}
+
+	pc.Result()
+
+	pc.persons=append(pc.persons,person{name: "f",age: 5})
+	pc.Result()
+
+}
+
+
+
+func main() {
+	/// --- Part I: Getting a IPFS node running
+
+	ctx, ipfs, cancel := Ini()
+	defer cancel()
+	cmd := os.Args[1]
+	if cmd == "upload" {
+		uploadsizestring := os.Args[2]
+		uploadsize, _ := strconv.Atoi(uploadsizestring)
+
+		uploadnumberstring := os.Args[3]
+		uploadnumber, _ := strconv.Atoi(uploadnumberstring)
+
+		cores, _ := strconv.Atoi(os.Args[4])
+		Upload(uploadsize, uploadnumber, cores, ctx, ipfs)
+		return
+	}
+	if cmd == "downloads" {
+
+		DownloadSerial(ctx, ipfs)
+		return
+	}
+
+	testtick()
 }

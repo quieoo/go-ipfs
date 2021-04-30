@@ -1,0 +1,10 @@
+nohup: 忽略输入
+-- Getting an IPFS node running -- 
+Spawning node on a temporary repo
+IPFS node is running
+Worker 12D3KooWEr3DGcqJPTzVuhX7EuuDgsZUx6qmZMP8v32fCRpy3Fvw working
+Worker 12D3KooWB8CCtZp5Fa7iiwdWL31wMaZGjYKk8E5UeFZssQQAXNY8 working
+block channel finish
+block channel finish
+2021-04-22 20:20:06.450846759 +0800 CST m=+21.991065794 Worker 12D3KooWEr3DGcqJPTzVuhX7EuuDgsZUx6qmZMP8v32fCRpy3Fvw done, effective: 420
+2021-04-22 20:20:06.451348798 +0800 CST m=+21.991567812 Worker 12D3KooWB8CCtZp5Fa7iiwdWL31wMaZGjYKk8E5UeFZssQQAXNY8 done, effective: 39
