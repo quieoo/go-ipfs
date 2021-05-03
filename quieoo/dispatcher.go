@@ -688,7 +688,7 @@ func (p *peerToDispatch) run() {
 	//fmt.Printf("Worker %s working\n", p.id)
 	p.working=true
 	defer func() {
-		fmt.Printf("%s Worker %s done, effective: %d\n", time.Now().String(), p.id, p.effective)
+		//fmt.Printf("%s Worker %s done, effective: %d\n", time.Now().String(), p.id, p.effective)
 		//p.dispatcher.worker.Delete(p.id)
 		p.working=false
 		p.dispatcher.monitor.updateEffects(p.id,p.effective)
@@ -709,7 +709,7 @@ func (p *peerToDispatch) run() {
 			p.finish <- p.id
 			return
 		}
-		fmt.Printf("%s worker %s, ask for %d blks\n",time.Now().String(),p.id,totalrequests)
+		//fmt.Printf("%s worker %s, ask for %d blks\n",time.Now().String(),p.id,totalrequests)
 		p.dispatcher.blkPending(toRequest)
 		for _, r := range toRequest {
 			requests.Store(r, Pending)
@@ -788,7 +788,7 @@ func (p *peerToDispatch) run() {
 	NextRound2:
 		p.requestEachTime=p.da.Adjust2(float64(totalrequests-numOfRequest)/float64(totalrequests),time.Now().Sub(start),totalrequests-numOfRequest)
 
-		fmt.Printf("%s worker %s, %d blks left\n",time.Now().String(),p.id,numOfRequest)
+		//fmt.Printf("%s worker %s, %d blks left\n",time.Now().String(),p.id,numOfRequest)
 	}
 }
 

@@ -33,3 +33,6 @@ docs/examples/go-ipfs-as-a-library/example-folder/Qm*
 /parts
 /stage
 /prime
+docs/examples/go-ipfs-as-a-library/ipfs
+docs/examples/go-ipfs-as-a-library/main
+bfg-1.14.0.jar
