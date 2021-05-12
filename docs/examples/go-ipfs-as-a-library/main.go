@@ -421,7 +421,8 @@ func Upload(size, number, cores int, ctx context.Context, ipfs icore.CoreAPI) {
 	totalAddTime:=0.0
 	totalProvideTime:=0.0
 	times:=0.0
-
+	var firstcid cid.Cid
+	first:=true
 	sendFunc := func(i int) {
 		for j := 0; j < number/coreNumber; j++ {
 			var subs string
@@ -434,13 +435,17 @@ func Upload(size, number, cores int, ctx context.Context, ipfs icore.CoreAPI) {
 			if err != nil {
 				panic(fmt.Errorf("Could not get File: %s", err))
 			}
+
 			//cid, err := sh.Add(strings.NewReader(subs))
 			start:=time.Now()
 			cid, err := ipfs.Unixfs().Add(ctx, someFile)
+			if first{
+				firstcid=cid.Cid()
+				first=false
+			}
 			//fmt.Printf("added file %s\n",cid.Cid())
 			provide:=time.Now()
-			//ipfs.Dht().Provide(ctx,cid)
-			//fmt.Printf("provide file %s\n",cid.Cid())
+
 			finish:=time.Now()
 			fmt.Printf("%s upload:provide time, (%f,%f)\n",cid.Cid(),provide.Sub(start).Seconds()*1000,finish.Sub(provide).Seconds()*1000)
 			totalAddTime+=provide.Sub(start).Seconds()
@@ -473,7 +478,11 @@ func Upload(size, number, cores int, ctx context.Context, ipfs icore.CoreAPI) {
 			stalls--
 			if stalls <= 0 {
 				f.Close()
-				fmt.Printf("average addtime: %f ms,average provide time %f ms\n",totalAddTime*1000/times, totalProvideTime*1000/times)
+				p:=icorepath.New(firstcid.String())
+				s:=time.Now()
+				ipfs.Dht().Provide(ctx,p)
+				fmt.Printf("provide %s\n",firstcid)
+				fmt.Printf("average addtime: %f ms,average provide time %f ms\n",totalAddTime*1000/times, time.Now().Sub(s).Seconds()*1000)
 				return
 			}
 		}
@@ -526,12 +535,11 @@ func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		os.Exit(1)
 	}
-
+	first:=true
 	br := bufio.NewReader(file)
 	var totalTime time.Duration = 0
 	var usetimes []time.Duration
 	var times = 0
-
 	for {
 		torequest, _, err := br.ReadLine()
 		if err != nil {
@@ -557,10 +565,11 @@ func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
 
 
 		times++
-		start := time.Now()
 		//fmt.Printf("%s getting file%s\n",start.String(),string(torequest))
 		//err = sh.Get(string(torequest), "output")
 		p := icorepath.New(string(torequest))
+		start := time.Now()
+
 		rootNode, err := ipfs.Unixfs().Get(ctx, p)
 
 		if err != nil {
@@ -578,6 +587,18 @@ func DownloadSerial(ctx context.Context, ipfs icore.CoreAPI) {
 		usetimes = append(usetimes, usetime)
 		totalTime += usetime
 		fmt.Printf("got file %s, time %f ms\n", torequest, usetime.Seconds()*1000)
+		provide:=time.Now()
+
+		if first{
+			//ipfs.Dht().Provide(ctx,p)
+			fmt.Printf("provide file %s\n",torequest)
+			first=false
+		}
+
+		finish:=time.Now()
+
+		fmt.Printf("%s upload:provide time, (%f,%f)\n",torequest,provide.Sub(start).Seconds()*1000,finish.Sub(provide).Seconds()*1000)
+
 
 		//remove peers
 		//removepeer:="12D3KooWB9gdRu8qfHdFU457WwJsm55V4J1N4jABYjckdP2cCidL"

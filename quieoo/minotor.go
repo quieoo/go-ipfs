@@ -8,6 +8,7 @@ import (
 type DispatchMonitor struct {
 	redundants int
 	effects map[peer.ID]int
+
 }
 
 func NewMonitor()*DispatchMonitor{

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"sort"
 	"sync"
@@ -36,17 +37,19 @@ type Dispatcher struct {
 
 	currentNodeData *bytes.Reader
 	ctx             context.Context
-	workctx			context.Context
-	cancle			context.CancelFunc
+	workctx         context.Context
+	cancle          context.CancelFunc
 
 	routing  routing.ContentRouting
 	rootNode format.NavigableNode
 
 	//worker  []*peerToDispatch
-	worker *sync.Map
+	worker  *sync.Map
 	monitor *DispatchMonitor
 
 	writeNodeLock *sync.Mutex
+
+	collectedblk int
 }
 
 //type Visitor func(node format.NavigableNode) error
@@ -59,12 +62,12 @@ func NewDisPatcher(ctx context.Context, root format.NavigableNode) *Dispatcher {
 		queryState:     new(sync.Map),
 		cids:           []cid.Cid{},
 		monitor:        NewMonitor(),
-		writeNodeLock: new(sync.Mutex),
-		worker: new(sync.Map),
+		writeNodeLock:  new(sync.Mutex),
+		worker:         new(sync.Map),
 	}
 	result.routing = result.path[0].GetGetter().(format.PeerGetter).GetRouting()
 	result.selfID = result.routing.(routing.ProviderManagerRouting).SelfID()
-	result.workctx,result.cancle=context.WithCancel(ctx)
+	result.workctx, result.cancle = context.WithCancel(ctx)
 	return result
 }
 
@@ -108,7 +111,7 @@ func (d *Dispatcher) blkFind(cids []cid.Cid) {
 	}
 	//fmt.Printf("blkFind %d\n",len(cids))
 	d.worker.Range(func(key, value interface{}) bool {
-		value.(*peerToDispatch).absorb2(cids,d.selfID)
+		value.(*peerToDispatch).absorb2(cids, d.selfID)
 		return true
 	})
 }
@@ -217,16 +220,14 @@ func (d *Dispatcher) Dispatch(visitor format.Visitor) error {
 }
 
 type ProviderRole int32
+
 const (
-	Role_FullProvider ProviderRole=0
-	Role_CoWorker	ProviderRole=1
+	Role_FullProvider ProviderRole = 0
+	Role_CoWorker     ProviderRole = 1
 )
 
-
-
 type peerToDispatch struct {
-	id              peer.ID
-
+	id peer.ID
 
 	sequence        []cid.Cid
 	distances       *sync.Map
@@ -244,11 +245,20 @@ type peerToDispatch struct {
 	effective int
 
 	lock *sync.Mutex
+	workinglock *sync.Mutex
 
 	wg *sync.WaitGroup
 	da *DynamicAdjuster
 
 	working bool
+
+	visitnumber int
+	visittime   float64
+	channeltime float64
+
+	preparenumber int
+	preparetime   float64
+	requesttime   float64
 }
 
 func (d *Dispatcher) newPeerToDispatch(p peer.ID, blks []cid.Cid, theGetter format.NodeGetter, finishchan chan peer.ID, visitFunc format.Visitor) *peerToDispatch {
@@ -258,7 +268,7 @@ func (d *Dispatcher) newPeerToDispatch(p peer.ID, blks []cid.Cid, theGetter form
 		id:              p,
 		distances:       new(sync.Map),
 		sequence:        []cid.Cid{},
-		requestEachTime: 16,
+		requestEachTime: 10,
 		getter:          theGetter,
 		ctx:             d.ctx,
 		dispatcher:      d,
@@ -267,13 +277,13 @@ func (d *Dispatcher) newPeerToDispatch(p peer.ID, blks []cid.Cid, theGetter form
 		stopflag:        false,
 		effective:       0,
 		lock:            new(sync.Mutex),
-		da:	NewDynamicAdjuster(),
-		working:false,
+		workinglock: new(sync.Mutex),
+		da:              NewDynamicAdjuster(),
+		working:         false,
 	}
 	result.absorb2(blks, d.selfID)
 	return result
 }
-
 
 type sortItem struct {
 	cpl   int64
@@ -644,9 +654,19 @@ func (p *peerToDispatch) absorb(blks []cid.Cid) {
 		p.sequence = mergedSequence
 	}
 }
+func Random(strings []cid.Cid) []cid.Cid{
 
+	for i := len(strings) - 1; i > 0; i-- {
+		num := rand.Intn(i + 1)
+		strings[i], strings[num] = strings[num], strings[i]
+	}
+	return strings
+}
 func (d *Dispatcher) sequeeze(peer peerToDispatch) []cid.Cid {
 	//fmt.Printf("peer %s, sequeeze from %d targets\n",peer.id,len(peer.sequence))
+
+	//peer.sequence=Random(peer.sequence)
+	//peer.requestEachTime=10
 
 	var result []cid.Cid
 	fetched := 0
@@ -683,45 +703,64 @@ func (d *Dispatcher) sequeeze(peer peerToDispatch) []cid.Cid {
 	return result
 }
 
-
 func (p *peerToDispatch) run() {
-	//fmt.Printf("Worker %s working\n", p.id)
-	p.working=true
+	fmt.Printf("Worker %s working\n", p.id)
+
+	p.workinglock.Lock()
+	p.working = true
+	p.workinglock.Unlock()
+
+	p.getter.(format.PeerGetter).PeerConnect(p.id)
 	defer func() {
-		//fmt.Printf("%s Worker %s done, effective: %d\n", time.Now().String(), p.id, p.effective)
+		fmt.Printf("%s Worker %s done, effective: %d\n", time.Now().String(), p.id, p.effective)
 		//p.dispatcher.worker.Delete(p.id)
-		p.working=false
-		p.dispatcher.monitor.updateEffects(p.id,p.effective)
+		p.workinglock.Lock()
+		p.working = false
+		p.workinglock.Unlock()
+		p.dispatcher.monitor.updateEffects(p.id, p.effective)
 		//dispatch_finish = true
+		//fmt.Printf("%s visit %d, use %f, channel use %f\n",p.id,p.visitnumber,p.visittime/float64(p.visitnumber),p.channeltime/float64(p.visitnumber))
+		//fmt.Printf("%s prepare %d, use %f, request use %f \n",p.id,p.preparenumber,p.preparetime/float64(p.preparenumber), p.requesttime/float64(p.preparenumber))
+
 	}()
 
-	limiter := time.NewTicker(MaxWaitTime)
+	limiter := time.NewTicker(p.da.tolerate)
 	for {
 		//fmt.Printf("peer %s, sequence %v\n",p.id,p.sequence)
+		p.preparenumber++
+		prestart := time.Now()
 
 		toRequest := p.dispatcher.sequeeze(*p)
 		requests := new(sync.Map)
 		numOfRequest := len(toRequest)
-		totalrequests:=numOfRequest
+		totalrequests := numOfRequest
 		//fmt.Printf("peer %s, sequeeze out targets %v\n",p.id,toRequest)
+		fmt.Printf("%s, ask for %d : %d\n", p.id, totalrequests,p.dispatcher.collectedblk)
 
 		if numOfRequest <= 0 {
 			p.finish <- p.id
 			return
 		}
-		//fmt.Printf("%s worker %s, ask for %d blks\n",time.Now().String(),p.id,totalrequests)
 		p.dispatcher.blkPending(toRequest)
 		for _, r := range toRequest {
 			requests.Store(r, Pending)
 		}
+		p.preparetime += time.Now().Sub(prestart).Seconds() * float64(1000)
 
+		restart := time.Now()
 		blocks := p.getter.(format.PeerGetter).GetBlocksFrom(p.ctx, toRequest, p.id)
-		start:=time.Now()
-		limiter.Reset(MaxWaitTime)
-		firstreceive:=true
+		p.requesttime += time.Now().Sub(restart).Seconds() * float64(1000)
+
+		start := time.Now()
+		readytochannel := time.Now()
+		limiter.Reset(p.da.tolerate)
 		for {
 			select {
 			case blk, ok := <-blocks:
+				p.channeltime += time.Now().Sub(readytochannel).Seconds() * float64(1000)
+				p.visitnumber++
+				visitstart := time.Now()
+
 				if !ok {
 					//fmt.Printf("block channel finish--%s\n",p.id)
 					goto NextRound2
@@ -737,11 +776,8 @@ func (p *peerToDispatch) run() {
 					state1, ok1 := p.dispatcher.queryState.Load(blk.Cid())
 					if ok1 && state1 != Filled {
 
-						if firstreceive{
-							limiter.Stop()
-							//fmt.Printf("%s worker %s receive first blk\n",time.Now().String(),p.id)
-							firstreceive=false
-						}
+						limiter.Reset(p.da.tolerate)
+
 						need = true
 						p.dispatcher.queryState.Store(blk.Cid(), Filled)
 						nd, err := format.Decode(blk)
@@ -753,14 +789,12 @@ func (p *peerToDispatch) run() {
 						//fmt.Printf("visit blk %s from %s\n",blk.Cid(),p.id)
 
 						p.effective++
-
 						//fmt.Printf("%s %s requesting lock\n",time.Now().String(),p.id)
 						p.dispatcher.writeNodeLock.Lock()
 						//fmt.Printf("%s %s got lock\n",time.Now().String(),p.id)
-
 						err = p.visit(navigableNode)
+						p.dispatcher.collectedblk++
 						p.dispatcher.writeNodeLock.Unlock()
-
 						if err != nil {
 							fmt.Println(err.Error())
 						}
@@ -770,6 +804,10 @@ func (p *peerToDispatch) run() {
 						}
 					}
 				}
+
+				p.visittime += time.Now().Sub(visitstart).Seconds() * float64(1000)
+				readytochannel = time.Now()
+
 				if !need {
 					p.dispatcher.monitor.updateRedundant()
 					continue
@@ -779,16 +817,18 @@ func (p *peerToDispatch) run() {
 
 					goto NextRound2
 				}
+
 			case <-limiter.C:
+				fmt.Printf("TIMELimit")
 				goto NextRound2
 			case <-p.ctx.Done():
 				return
 			}
 		}
 	NextRound2:
-		p.requestEachTime=p.da.Adjust2(float64(totalrequests-numOfRequest)/float64(totalrequests),time.Now().Sub(start),totalrequests-numOfRequest)
+		p.requestEachTime = p.da.Adjust5(float64(totalrequests-numOfRequest)/float64(totalrequests), time.Now().Sub(start), totalrequests-numOfRequest)
 
-		//fmt.Printf("%s worker %s, %d blks left\n",time.Now().String(),p.id,numOfRequest)
+		fmt.Printf("%s, %d blks left\n", p.id, numOfRequest)
 	}
 }
 
@@ -975,13 +1015,15 @@ func (p *peerToDispatch) InitRequestBlkNumber(blkNumber uint64) {
 			p.requestEachTime = int(blkNumber) / 2
 		}
 	}
+	//p.requestEachTime=5
+	p.da.L = p.requestEachTime
 
-	p.requestEachTime=2
 }
 
 var dispatcher_close bool
+
 func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
-	dispatcher_close=false
+	dispatcher_close = false
 	defer func() {
 		//d.monitor.collect()
 		MyTracker.UpdateVariance(d.monitor.GetEffectsVariance())
@@ -1018,8 +1060,8 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 		defer func() {
 			//fmt.Printf("provider-finder down\n")
 		}()
-		for{
-			if dispatcher_close{
+		for {
+			if dispatcher_close {
 				return
 			}
 
@@ -1036,7 +1078,7 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 				}
 			}
 		nextfinder:
-			time.Sleep(1000*time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 
 	}()
@@ -1045,13 +1087,13 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 		defer close(providers)
 
 		for {
-			if dispatcher_close{
+			if dispatcher_close {
 				return
 			}
 			//only  get co-worker info from full providers
 			d.worker.Range(func(key, value interface{}) bool {
 				provs, err1 := d.routing.(routing.ProviderManagerRouting).FindProviderFrom(d.workctx, rootNode.Cid(), key.(peer.ID))
-				if err1!=nil{
+				if err1 != nil {
 					//fmt.Println(err1.Error())
 					return false
 				}
@@ -1061,7 +1103,7 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 				}
 				return true
 			})
-			time.Sleep(1000*time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}()
 
@@ -1073,18 +1115,23 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 				fmt.Printf("provider channel close")
 				return errors.New("provider channel close")
 			}
-			if prov!=d.selfID{
-				_,ok1:=d.worker.Load(prov)
-				if !ok1{
+			if prov != d.selfID {
+				_, ok1 := d.worker.Load(prov)
+				if !ok1 {
+
 					newworker := d.newPeerToDispatch(prov, d.cids, d.path[0].GetGetter(), finish, visit)
 					newworker.ctx = d.workctx
-
+					//newworker.getter.(format.PeerGetter).PeerConnect(prov)
 					newworker.InitRequestBlkNumber(blkNumber)
 					//d.worker = append(d.worker, newworker)
-					d.worker.Store(prov,newworker)
+					d.worker.Store(prov, newworker)
 				}
-				worker,_:=d.worker.Load(prov)
-				if !worker.(*peerToDispatch).working{
+				worker, _ := d.worker.Load(prov)
+				p:=worker.(*peerToDispatch)
+				p.workinglock.Lock()
+				isworking:=p.working
+				p.workinglock.Unlock()
+				if !isworking {
 					go worker.(*peerToDispatch).run()
 					go func() {
 						//only put co-worker info to full providers
@@ -1100,8 +1147,8 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 
 			allends := true
 			d.worker.Range(func(key, value interface{}) bool {
-				if value.(*peerToDispatch).working{
-					allends=false
+				if value.(*peerToDispatch).working {
+					allends = false
 					return false
 				}
 				return true
@@ -1111,7 +1158,7 @@ func (d *Dispatcher) Dispatch3(visit format.Visitor) error {
 					w.Stop()
 				}*/
 				//fmt.Printf("%s Dispatcher cancle\n", time.Now().String())
-				dispatcher_close=true
+				dispatcher_close = true
 				d.cancle()
 				return nil
 			}

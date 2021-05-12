@@ -35,4 +35,7 @@ docs/examples/go-ipfs-as-a-library/example-folder/Qm*
 /prime
 docs/examples/go-ipfs-as-a-library/ipfs
 docs/examples/go-ipfs-as-a-library/main
+docs/examples/go-ipfs-as-a-library/origin
+docs/examples/go-ipfs-as-a-library/pbitswap
+docs/examples/go-ipfs-as-a-library/pbitswap-static
 bfg-1.14.0.jar
