@@ -107,3 +107,7 @@ require (
 )
 
 go 1.14
+
+replace (
+	// github.com/ipfs/go-bitswap => ./../go-bitswap
+)
