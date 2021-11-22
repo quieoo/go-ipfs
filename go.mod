@@ -110,6 +110,7 @@ require (
 go 1.14
 
 replace (
-	  github.com/ipfs/go-bitswap => ./../go-bitswap
-	  metrics => ./../metrics
+	  github.com/ipfs/go-bitswap => ./../go-bitswap/
+	  metrics => ./../metrics/
+	  github.com/ipfs/go-ipfs-provider => ./../go-ipfs-provider/
 )
