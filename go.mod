@@ -104,10 +104,12 @@ require (
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2
+	metrics v0.0.0
 )
 
 go 1.14
 
 replace (
-	// github.com/ipfs/go-bitswap => ./../go-bitswap
+	  github.com/ipfs/go-bitswap => ./../go-bitswap
+	  metrics => ./../metrics
 )
