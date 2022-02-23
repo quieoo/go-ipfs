@@ -241,7 +241,7 @@ only-hash, and progress/status related flags) will change the final hash.
 				node := addit.Node()
 				file := node.(files.File)
 				reader := io.Reader(file)
-				buf := make([]byte, 1<<5)
+				buf := make([]byte, 1<<10)
 				reader.Read(buf)
 				//fmt.Printf("%s\n", buf)
 				//check pre-defined prefix
@@ -249,9 +249,13 @@ only-hash, and progress/status related flags) will change the final hash.
 				pre := "fabric-uploader-local-file-"
 				str := string(buf)
 				if strings.Index(str, pre) == 0 {
-					filename := str[len(pre):strings.Index(str, string(0))]
-					dir := "/export/"
-					//dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
+					trimindex := strings.Index(str, string(0))
+					if trimindex == -1 {
+						trimindex = len(str) - 1
+					}
+					filename := str[len(pre):trimindex]
+					//dir := "/export/"
+					dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
 					file, err := os.Open(dir + filename)
 					//fmt.Printf("%x\n", dir+filename)
 					//fmt.Printf("%x\n", "/home/quieoo/desktop/tmp/ipfsdocker/dt/t")
