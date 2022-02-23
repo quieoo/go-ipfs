@@ -4,10 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	gopath "path"
-	"strconv"
-
 	"github.com/ipfs/go-cid"
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	chunker "github.com/ipfs/go-ipfs-chunker"
@@ -24,6 +20,9 @@ import (
 	"github.com/ipfs/go-unixfs/importer/trickle"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	"github.com/ipfs/interface-go-ipfs-core/path"
+	"io"
+	gopath "path"
+	"strconv"
 )
 
 var log = logging.Logger("coreunix")
@@ -102,6 +101,7 @@ func (adder *Adder) SetMfsRoot(r *mfs.Root) {
 
 // Constructs a node from reader's data, and adds it. Doesn't pin.
 func (adder *Adder) add(reader io.Reader) (ipld.Node, error) {
+
 	chnk, err := chunker.FromString(reader, adder.Chunker)
 	if err != nil {
 		return nil, err
@@ -395,7 +395,6 @@ func (adder *Adder) addFile(path string, file files.File) error {
 			reader = rdr
 		}
 	}
-
 	dagnode, err := adder.add(reader)
 	if err != nil {
 		return err

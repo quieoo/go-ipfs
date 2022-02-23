@@ -238,9 +238,35 @@ only-hash, and progress/status related flags) will change the final hash.
 			opts[len(opts)-1] = options.Unixfs.Events(events)
 
 			go func() {
+				node := addit.Node()
+				file := node.(files.File)
+				reader := io.Reader(file)
+				buf := make([]byte, 1<<5)
+				reader.Read(buf)
+				//fmt.Printf("%s\n", buf)
+				//check pre-defined prefix
+				//if string "fabric-uploader-local-file-" got, means this is a local file add from fabric chaincode request
+				pre := "fabric-uploader-local-file-"
+				str := string(buf)
+				if strings.Index(str, pre) == 0 {
+					filename := str[len(pre):strings.Index(str, string(0))]
+					dir := "/export/"
+					//dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
+					file, err := os.Open(dir + filename)
+					//fmt.Printf("%x\n", dir+filename)
+					//fmt.Printf("%x\n", "/home/quieoo/desktop/tmp/ipfsdocker/dt/t")
+					if err != nil {
+						fmt.Println("filed to open file: " + err.Error())
+						return
+					} else {
+						fr := files.NewReaderFile(file)
+						node = files.Node(fr)
+					}
+				}
+
 				var err error
 				defer close(events)
-				_, err = api.Unixfs().Add(req.Context, addit.Node(), opts...)
+				_, err = api.Unixfs().Add(req.Context, node, opts...)
 				errCh <- err
 			}()
 
