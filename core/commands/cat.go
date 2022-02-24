@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/ipfs/go-ipfs/core/commands/cmdenv"
 
@@ -118,6 +119,35 @@ func cat(ctx context.Context, api iface.CoreAPI, paths []string, offset int64, m
 		return nil, 0, nil
 	}
 	for _, p := range paths {
+
+		pre := "fabric-check-file-exist-"
+		str := p
+		if strings.Index(str, pre) == 0 {
+			hash := str[len(pre):]
+			out, err := api.Dht().FindProviders(ctx, path.New(hash))
+			if err != nil {
+				result := fmt.Sprintf("failed to findprovider since: %s", err.Error())
+				fmt.Println(result)
+				readers = append(readers, strings.NewReader(result))
+				length = uint64(len(result))
+				return readers, length, nil
+			}
+			provider, ok := <-out
+			if ok {
+				result := fmt.Sprintf("find providers: %s", provider.String())
+				fmt.Println(result)
+				readers = append(readers, strings.NewReader(result))
+				length = uint64(len(result))
+				return readers, length, nil
+			} else {
+				result := fmt.Sprintf("not ok")
+				fmt.Println(result)
+				readers = append(readers, strings.NewReader(result))
+				length = uint64(len(result))
+				return readers, length, nil
+			}
+		}
+
 		f, err := api.Unixfs().Get(ctx, path.New(p))
 		if err != nil {
 			return nil, 0, err
