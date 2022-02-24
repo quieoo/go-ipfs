@@ -254,13 +254,15 @@ only-hash, and progress/status related flags) will change the final hash.
 						trimindex = len(str) - 1
 					}
 					filename := str[len(pre):trimindex]
-					dir := "/export/"
-					//dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
+					//dir := "/export/"
+					dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
 					file, err := os.Open(dir + filename)
 					//fmt.Printf("%x\n", dir+filename)
 					//fmt.Printf("%x\n", "/home/quieoo/desktop/tmp/ipfsdocker/dt/t")
 					if err != nil {
 						fmt.Println("filed to open file: " + err.Error())
+						errCh <- err
+						events <- err
 						return
 					} else {
 						fr := files.NewReaderFile(file)
@@ -273,11 +275,10 @@ only-hash, and progress/status related flags) will change the final hash.
 				_, err = api.Unixfs().Add(req.Context, node, opts...)
 				errCh <- err
 			}()
-
 			for event := range events {
 				output, ok := event.(*coreiface.AddEvent)
 				if !ok {
-					return errors.New("unknown event type")
+					return errors.New("unknown event type, maybe because file don't exists")
 				}
 
 				h := ""
@@ -300,7 +301,6 @@ only-hash, and progress/status related flags) will change the final hash.
 					return err
 				}
 			}
-
 			if err := <-errCh; err != nil {
 				return err
 			}
