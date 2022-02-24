@@ -254,8 +254,8 @@ only-hash, and progress/status related flags) will change the final hash.
 						trimindex = len(str) - 1
 					}
 					filename := str[len(pre):trimindex]
-					//dir := "/export/"
-					dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
+					dir := "/export/"
+					//dir := "/home/quieoo/desktop/tmp/ipfsdocker/dt/"
 					file, err := os.Open(dir + filename)
 					//fmt.Printf("%x\n", dir+filename)
 					//fmt.Printf("%x\n", "/home/quieoo/desktop/tmp/ipfsdocker/dt/t")
