@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"metrics"
 	gopath "path"
 	"strconv"
+	"time"
 
 	"github.com/ipfs/go-cid"
 	bstore "github.com/ipfs/go-ipfs-blockstore"
@@ -277,7 +279,9 @@ func (adder *Adder) AddAllAndPin(file files.Node) (ipld.Node, error) {
 	rootdir := mr.GetDirectory()
 	root = rootdir
 
+	start := time.Now()
 	err = root.Flush()
+	metrics.PersistDura += time.Now().Sub(start)
 	if err != nil {
 		return nil, err
 	}

@@ -3,9 +3,10 @@ package coreapi
 import (
 	"context"
 	"fmt"
-	"sync"
-
 	"github.com/ipfs/go-ipfs/core"
+	"metrics"
+	"sync"
+	"time"
 
 	"github.com/ipfs/go-ipfs/core/coreunix"
 
@@ -170,9 +171,11 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.Node, opts ...options
 	}
 
 	if !settings.OnlyHash {
+		start := time.Now()
 		if err := api.provider.Provide(nd.Cid()); err != nil {
 			return nil, err
 		}
+		metrics.ProvideDura += time.Now().Sub(start)
 	}
 
 	return path.IpfsPath(nd.Cid()), nil
