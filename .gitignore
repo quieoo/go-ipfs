@@ -34,4 +34,4 @@ docs/examples/go-ipfs-as-a-library/example-folder/Qm*
 /stage
 /prime
 
-./.idea/*
+/.idea
