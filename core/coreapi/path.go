@@ -3,17 +3,15 @@ package coreapi
 import (
 	"context"
 	"fmt"
-	gopath "path"
-
-	"github.com/ipfs/go-namesys/resolve"
-
 	"github.com/ipfs/go-cid"
 	ipld "github.com/ipfs/go-ipld-format"
+	"github.com/ipfs/go-namesys/resolve"
 	ipfspath "github.com/ipfs/go-path"
 	"github.com/ipfs/go-path/resolver"
 	uio "github.com/ipfs/go-unixfs/io"
 	coreiface "github.com/ipfs/interface-go-ipfs-core"
 	path "github.com/ipfs/interface-go-ipfs-core/path"
+	gopath "path"
 )
 
 // ResolveNode resolves the path `p` using Unixfs resolver, gets and returns the
@@ -24,7 +22,11 @@ func (api *CoreAPI) ResolveNode(ctx context.Context, p path.Path) (ipld.Node, er
 		return nil, err
 	}
 
-	node, err := api.dag.Get(ctx, rp.Cid())
+	node, err := api.dag.Get(ctx, rp.Cid()) //*merkledag.ComboService -> *merkledag.sesGetter -> *blockservice.Session ->go-blockservice.getBlock ->session.(*Session).GetBlock
+
+	if err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}

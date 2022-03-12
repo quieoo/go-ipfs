@@ -116,4 +116,7 @@ replace (
 	  github.com/ipfs/go-merkledag => ./../go-merkledag/
 	  github.com/ipfs/go-ipld-format => ./../go-ipld-format/
 	  github.com/ipfs/go-ds-flatfs => ./../go-ds-flatfs/
+	  github.com/ipfs/go-blockservice => ./../go-blockservice/
+	  github.com/ipfs/go-unixfs => ./../go-unixfs/
+	  github.com/libp2p/go-libp2p-kad-dht => ./../go-libp2p-kad-dht/
 )
