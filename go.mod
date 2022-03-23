@@ -119,4 +119,5 @@ replace (
 	  github.com/ipfs/go-blockservice => ./../go-blockservice/
 	  github.com/ipfs/go-unixfs => ./../go-unixfs/
 	  github.com/libp2p/go-libp2p-kad-dht => ./../go-libp2p-kad-dht/
+	  github.com/ipfs/go-ipfs-blockstore => ./../go-ipfs-blockstore/
 )
