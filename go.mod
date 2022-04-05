@@ -88,7 +88,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/multiformats/go-multiaddr-dns v0.2.0
 	github.com/multiformats/go-multibase v0.0.3
-	github.com/multiformats/go-multihash v0.0.14
+	github.com/multiformats/go-multihash v0.0.15
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.10.0
@@ -110,14 +110,14 @@ require (
 go 1.14
 
 replace (
-	  github.com/ipfs/go-bitswap => ./../go-bitswap/
-	  metrics => ./../metrics/
-	  github.com/ipfs/go-ipfs-provider => ./../go-ipfs-provider/
-	  github.com/ipfs/go-merkledag => ./../go-merkledag/
-	  github.com/ipfs/go-ipld-format => ./../go-ipld-format/
-	  github.com/ipfs/go-ds-flatfs => ./../go-ds-flatfs/
-	  github.com/ipfs/go-blockservice => ./../go-blockservice/
-	  github.com/ipfs/go-unixfs => ./../go-unixfs/
-	  github.com/libp2p/go-libp2p-kad-dht => ./../go-libp2p-kad-dht/
-	  github.com/ipfs/go-ipfs-blockstore => ./../go-ipfs-blockstore/
+	github.com/ipfs/go-bitswap => ./../go-bitswap/
+	github.com/ipfs/go-blockservice => ./../go-blockservice/
+	github.com/ipfs/go-ds-flatfs => ./../go-ds-flatfs/
+	github.com/ipfs/go-ipfs-blockstore => ./../go-ipfs-blockstore/
+	github.com/ipfs/go-ipfs-provider => ./../go-ipfs-provider/
+	github.com/ipfs/go-ipld-format => ./../go-ipld-format/
+	github.com/ipfs/go-merkledag => ./../go-merkledag/
+	github.com/ipfs/go-unixfs => ./../go-unixfs/
+	github.com/libp2p/go-libp2p-kad-dht => ./../go-libp2p-kad-dht/
+	metrics => ./../metrics/
 )
