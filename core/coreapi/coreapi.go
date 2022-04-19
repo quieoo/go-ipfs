@@ -87,6 +87,10 @@ func NewCoreAPI(n *core.IpfsNode, opts ...options.ApiOption) (coreiface.CoreAPI,
 	return (&CoreAPI{nd: n, parentOpts: *parentOpts}).WithOptions(opts...)
 }
 
+func (api *CoreAPI) SimpleProvider() provider.System {
+	return api.provider
+}
+
 // Unixfs returns the UnixfsAPI interface implementation backed by the go-ipfs node
 func (api *CoreAPI) Unixfs() coreiface.UnixfsAPI {
 	return (*UnixfsAPI)(api)

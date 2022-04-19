@@ -121,4 +121,5 @@ replace (
 	github.com/libp2p/go-libp2p-kad-dht => ./../go-libp2p-kad-dht/
 	metrics => ./../metrics/
 	github.com/ipfs/go-ds-leveldb => ./../go-ds-leveldb/
+	github.com/ipfs/interface-go-ipfs-core => ./../interface-go-ipfs-core/
 )
