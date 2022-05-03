@@ -172,8 +172,15 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.Node, opts ...options
 
 	if !settings.OnlyHash {
 		start := time.Now()
-		if err := api.provider.Provide(nd.Cid()); err != nil {
-			return nil, err
+		if settings.ProvideThrough {
+			err := api.routing.Provide(ctx, nd.Cid(), true)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			if err := api.provider.Provide(nd.Cid()); err != nil {
+				return nil, err
+			}
 		}
 		metrics.ProvideDura += time.Now().Sub(start)
 	}
