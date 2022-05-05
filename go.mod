@@ -122,4 +122,5 @@ replace (
 	metrics => ./../metrics/
 	github.com/ipfs/go-ds-leveldb => ./../go-ds-leveldb/
 	github.com/ipfs/interface-go-ipfs-core => ./../interface-go-ipfs-core/
+	github.com/ipfs/go-ipfs-chunker => ./../go-ipfs-chunker/
 )
