@@ -123,4 +123,10 @@ replace (
 	github.com/ipfs/go-ds-leveldb => ./../go-ds-leveldb/
 	github.com/ipfs/interface-go-ipfs-core => ./../interface-go-ipfs-core/
 	github.com/ipfs/go-ipfs-chunker => ./../go-ipfs-chunker/
+	github.com/libp2p/go-libp2p => ./../go-libp2p/
+	github.com/libp2p/go-libp2p-core => ./../go-libp2p-core/
+	github.com/ipfs/go-ipfs-exchange-interface => ./../go-ipfs-exchange-interface/
+	github.com/ipfs/go-ipfs-exchange-offline => ./../go-ipfs-exchange-offline/
+	pbitswap => ./../pbitswap/
+	github.com/libp2p/go-libp2p-routing-helpers => ./../go-libp2p-routing-helpers/
 )
