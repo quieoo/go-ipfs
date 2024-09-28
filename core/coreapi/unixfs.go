@@ -3,6 +3,7 @@ package coreapi
 import (
 	"context"
 	"fmt"
+	"time"
 
 	blockservice "github.com/ipfs/boxo/blockservice"
 	bstore "github.com/ipfs/boxo/blockstore"
@@ -173,6 +174,14 @@ func (api *UnixfsAPI) Add(ctx context.Context, files files.Node, opts ...options
 	}
 
 	if !settings.OnlyHash {
+		start := time.Now()
+		err := api.routing.Provide(ctx, nd.Cid(), true)
+		elapsed := time.Since(start)
+		fmt.Printf("Provided %s in %f seconds\n", nd.Cid(), elapsed.Seconds())
+		if err != nil {
+			return path.ImmutablePath{}, err
+		}
+
 		if err := api.provider.Provide(nd.Cid()); err != nil {
 			return path.ImmutablePath{}, err
 		}

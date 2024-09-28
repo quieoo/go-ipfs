@@ -252,3 +252,7 @@ require (
 )
 
 go 1.22
+
+replace(
+	github.com/ipfs/boxo => ../boxo/
+)
